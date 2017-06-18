@@ -181,7 +181,7 @@ module.exports = function() {
                 function update_interfaces(next_step) {
                     write_template_to_file(
                         "./assets/etc/systemd/network/wifi.network.template",
-                        "/etc/systemd/network/" + context["wifi_interface"] + ".template",
+                        "/etc/systemd/network/" + context["wifi_interface"] + ".network",
                         context, next_step);
                 },
 
@@ -206,15 +206,6 @@ module.exports = function() {
                     systemctl.restart('systemd-networkd', next_step);
                 },
 
-                // Enable the interface in the dhcp server
-                function enable_dhcpd_service(next_step) {
-                    systemctl.enable('dhcpd4@' + context.wifi_interface, next_step);
-                },
-
-                function enable_hostapd_service(next_step) {
-                    systemctl.enable('hostapd', next_step);
-                },
-
                 function restart_network_interfaces(next_step) {
                     _restart_wireless_network(context.wifi_interface, next_step);
                 },
@@ -226,6 +217,10 @@ module.exports = function() {
                 function restart_hostapd_service(next_step) {
                     systemctl.restart('hostapd', next_step);
                 },
+
+                function setup_static_route(next_step) {
+                    exec('ip route add ' + context.access_point.subnet_ip + context.access_point.subnet_notation + ' dev ' + context.wireless_interface, next_step);
+                }
 
                 // TODO: Do we need to issue a reboot here?
 
@@ -266,16 +261,8 @@ module.exports = function() {
                     systemctl.stop('dhcpd4@' + context.wifi_interface, next_step);
                 },
 
-                function disable_dhcp_service(next_step) {
-                    systemctl.disable('dhcpd4@' + context.wifi_interface, next_step);
-                },
-
                 function stop_hostapd_service(next_step) {
                     systemctl.stop('hostapd', next_step);
-                },
-
-                function disable_hostapd_service(next_step) {
-                    systemctl.disable('hostapd', next_step);
                 },
 
                 function enable_netctl_auto(next_step) {
