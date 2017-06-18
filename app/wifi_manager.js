@@ -181,7 +181,7 @@ module.exports = function() {
 
                 // Enable the interface in the dhcp server
                 function update_dhcp_interface(next_step) {
-                    systemctl.enable('dhcpd4@' + context.wlan_iface, next_step);
+                    systemctl.enable('dhcpd4@' + context.wifi_interface, next_step);
                 },
 
                 // Enable hostapd.conf file
@@ -201,7 +201,7 @@ module.exports = function() {
                 },
 
                 function restart_dhcp_service(next_step) {
-                    systemctl.restart('dhcpd4@' + context.wlan_iface, next_step);
+                    systemctl.restart('dhcpd4@' + context.wifi_interface, next_step);
                 },
 
                 function restart_hostapd_service(next_step) {
