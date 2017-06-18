@@ -94,7 +94,20 @@ module.exports = function() {
     },
 
     _restart_wireless_network = function(wlan_iface, callback) {
-        systemctl.restart('netctl-auto@' + wlan_iface, callback);
+        async.series([
+            function down(next_step) {
+                exec("sudo ip link set " + wlan_iface + " down", function(error, stdout, stderr) {
+                    if (!error) console.log("ifdown " + wlan_iface + " successful...");
+                    next_step();
+                });
+            },
+            function up(next_step) {
+                exec("sudo ip link set " + wlan_iface + " up", function(error, stdout, stderr) {
+                    if (!error) console.log("ifup " + wlan_iface + " successful...");
+                    next_step();
+                });
+            },
+        ], callback);
     },
 
     // Wifi related functions
@@ -159,13 +172,16 @@ module.exports = function() {
 
             // Here we need to actually follow the steps to enable the ap
             async.series([
+                function disable_auto_wifi(next_step) {
+                    systemctl.disable('netctl-auto@' + context["wifi_interface"], next_step)
+                },
 
                 // Enable the access point ip and netmask + static
                 // DHCP for the wlan0 interface
                 function update_interfaces(next_step) {
                     write_template_to_file(
-                        "./assets/etc/netctl/ap.template",
-                        "/etc/netctl/" + context["wifi_interface"],
+                        "./assets/etc/systemd/network/wifi.network.template",
+                        "/etc/systemd/network/" + context["wifi_interface"] + ".template",
                         context, next_step);
                 },
 
@@ -179,12 +195,6 @@ module.exports = function() {
                         context, next_step);
                 },
 
-                // Enable the interface in the dhcp server
-                function update_dhcp_interface(next_step) {
-                    systemctl.enable('dhcpd4@' + context.wifi_interface, next_step);
-                },
-
-                // Enable hostapd.conf file
                 function update_hostapd_conf(next_step) {
                     write_template_to_file(
                         "./assets/etc/hostapd/hostapd.conf.template",
@@ -192,7 +202,16 @@ module.exports = function() {
                         context, next_step);
                 },
 
-                function update_hostapd_default(next_step) {
+                function restart_systemd_networkd(next_step) {
+                    systemctl.restart('systemd-networkd', next_step);
+                },
+
+                // Enable the interface in the dhcp server
+                function enable_dhcpd_service(next_step) {
+                    systemctl.enable('dhcpd4@' + context.wifi_interface, next_step);
+                },
+
+                function enable_hostapd_service(next_step) {
                     systemctl.enable('hostapd', next_step);
                 },
 
@@ -227,6 +246,14 @@ module.exports = function() {
 
             async.series([
 
+                function remove_networkd_wifi_profile(next_step) {
+                    fs.unlink("/etc/systemd/network/" + context["wifi_interface"] + ".template", next_step);
+                },
+
+                function restart_systemd_networkd_service(next_step) {
+                    systemctl.restart('systemd-networkd', next_step);
+                },
+
                 // Update /etc/network/interface with correct info...
                 function update_interfaces(next_step) {
                     write_template_to_file(
@@ -239,8 +266,20 @@ module.exports = function() {
                     systemctl.stop('dhcpd4@' + context.wifi_interface, next_step);
                 },
 
+                function disable_dhcp_service(next_step) {
+                    systemctl.disable('dhcpd4@' + context.wifi_interface, next_step);
+                },
+
                 function stop_hostapd_service(next_step) {
                     systemctl.stop('hostapd', next_step);
+                },
+
+                function disable_hostapd_service(next_step) {
+                    systemctl.disable('hostapd', next_step);
+                },
+
+                function enable_netctl_auto(next_step) {
+                    systemctl.enable('netctl-auto@' + context.wifi_interface, next_step);
                 },
 
                 function restart_network_interfaces(next_step) {
