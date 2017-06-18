@@ -174,7 +174,7 @@ module.exports = function() {
                     var context = config.access_point;
                     // We must enable this to turn on the access point
                     write_template_to_file(
-                        "./assets/etc/dhcp/dhcpd.conf.template",
+                        "./assets/etc/dhcpd.conf.template",
                         "/etc/dhcpd.conf",
                         context, next_step);
                 },
