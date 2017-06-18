@@ -1,7 +1,7 @@
 var _         = require("underscore")._,
     async     = require("async"),
     fs        = require("fs"),
-    systemctl = require("./systemctl"),
+    systemctl = require("./systemctl")(),
     exec      = require("child_process").exec,
     config    = require("../config.json");
 
