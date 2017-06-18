@@ -1,0 +1,9 @@
+#
+# wifi-configuration auto-generated file
+#
+
+Description='Wifi profile managed by Captive Wifi Configuration'
+Interface={{ wifi_interface }}
+Connection=wireless
+IP=static
+Address=('{{ ip_addr }}{{ subnet_notation }}')

@@ -15,6 +15,7 @@ module.exports = function() {
         if (typeof(deps["binaries"]) == "undefined") {
             deps["binaries"] = [];
         }
+        
         if (typeof(deps["files"]) == "undefined") {
             deps["files"] = [];
         }
