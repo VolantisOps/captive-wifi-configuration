@@ -22,8 +22,9 @@ That in turn broadly follows these [instructions](http://www.maketecheasier.com/
 
 ```sh
 $sudo pacman -Sy bower dhcp hostapd
-$git clone https://github.com/bmcclure/captive-wifi-configuration.git
-$cd captive-wifi-configuration
+$sudo mkdir -p /opt/wifi-config
+$cd /opt/wifi-config
+$sudo git clone https://github.com/bmcclure/captive-wifi-configuration.git .
 $npm update
 $bower install
 $sudo npm start
@@ -33,13 +34,13 @@ $sudo npm start
 
 The `hostapd` application does not like to behave itself on some wifi adapters (RTL8192CU et al). This link does a good job explaining the issue and the remedy: [Edimax Wifi Issues](http://willhaley.com/blog/raspberry-pi-hotspot-ew7811un-rtl8188cus/). The gist of what you need to do is as follows:
 
-```
+```sh
 # run iw to detect if you have a rtl871xdrv or nl80211 driver
 $iw list
 ```
 
 If the above says `nl80211 not found.` it means you are running the `rtl871xdrv` driver and probably need to update the `hostapd` binary as follows:
-```
+```sh
 $cd raspberry-wifi-conf
 $sudo mv /usr/sbin/hostapd /usr/sbin/hostapd.OLD
 $sudo mv assets/bin/hostapd.rtl871xdrv /usr/sbin/hostapd
@@ -61,9 +62,9 @@ This is approximately what occurs when we run this app:
 5. Once the system is successfully configured, reset it to act as a wifi device (not AP anymore), and setup it's wifi network based on what the user selected.
 6. At this stage, the system is named, and has a valid wifi connection which it is now bound to.
 
-```
-cd /opt/wifi-configuration
-sudo node server.js < /dev/null &
+```sh
+$cd /opt/wifi-config
+$sudo node server.js < /dev/null &
 ```
 
 ## User Interface
