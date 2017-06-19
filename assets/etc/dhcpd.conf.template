@@ -11,6 +11,8 @@ ddns-update-style none;
 default-lease-time 600;
 max-lease-time 7200;
 
+ping-check false;
+
 # If this DHCP server is the official DHCP server for the local
 # network, the authoritative directive should be uncommented.
 {[ if (enable_ap) { ]}
