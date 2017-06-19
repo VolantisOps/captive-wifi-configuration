@@ -195,6 +195,17 @@ module.exports = function() {
                         context, next_step);
                 },
 
+                function copy_custom_dhcpd_service(next_step) {
+                    write_template_to_file(
+                        "./assets/etc/systemd/system/dhcpd4@.service.template",
+                        "/etc/systemd/system/dhcpd4@.service",
+                        context, next_step);
+                },
+
+                function reload_systemd_daemon(next_step) {
+                    exec('sudo systemctl daemon-reload', next_step)
+                },
+
                 function update_hostapd_conf(next_step) {
                     write_template_to_file(
                         "./assets/etc/hostapd/hostapd.conf.template",
@@ -221,16 +232,12 @@ module.exports = function() {
                 function setup_static_route(next_step) {
                     exec('ip route add ' + context.access_point.subnet_ip + context.access_point.subnet_notation + ' dev ' + context.wireless_interface, next_step);
                 }
-
-                // TODO: Do we need to issue a reboot here?
-
             ], callback);
         });
     },
 
     // Disables AP mode and reverts to wifi connection
     _enable_wifi_mode = function(connection_info, callback) {
-
         _is_wifi_enabled(function(error, result_ip) {
             if (error) return callback(error);
 
