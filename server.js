@@ -3,7 +3,8 @@ var async               = require("async"),
     dependency_manager  = require("./app/dependency_manager")(),
     config              = require("./config.json"),
     ping                = require("net-ping").createSession(),
-    exec                = require("child_process").exec;
+    exec                = require("child_process").exec,
+    iwconfig            = require('wireless-tools/iwconfig');
 
 /*****************************************************************************\
     1. Check for an existing internet connection
@@ -23,13 +24,15 @@ var async               = require("async"),
 \*****************************************************************************/
 async.series([
     function test_if_wireless_interface_exists(callback) {
-        exec('iwconfig 2>/dev/null | grep -o "^\w*"', function(error, stdout, stderr) {
-            if (!stdout.match(/^\w+/)) {
+        iwconfig.status(function(error, status) {
+            if (!error && status[0] != null) {
+                var interface = status[0]['interface'];
+                // @todo Save stdout as the wireless interface name
+            } else {
                 console.log("No wireless interface exists. Exiting.")
                 process.exit(0);
             }
-            // @todo Save stdout as the wireless interface name
-        })
+        });
     },
 
     // Check if we already have an internet connection and bail out if so
