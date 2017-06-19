@@ -2,7 +2,8 @@ var async               = require("async"),
     wifi_manager        = require("./app/wifi_manager")(),
     dependency_manager  = require("./app/dependency_manager")(),
     config              = require("./config.json"),
-    ping                = require("net-ping").createSession();
+    ping                = require("net-ping").createSession(),
+    exec                = require("child_process").exec;
 
 /*****************************************************************************\
     1. Check for an existing internet connection
