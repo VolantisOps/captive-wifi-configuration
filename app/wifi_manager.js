@@ -230,7 +230,7 @@ module.exports = function() {
                 },
 
                 function setup_static_route(next_step) {
-                    exec('ip route add ' + context.access_point.subnet_ip + context.access_point.subnet_notation + ' dev ' + context.wireless_interface, next_step);
+                    exec('ip route add ' + config.access_point.subnet_ip + config.access_point.subnet_notation + ' dev ' + context.wifi_interface, next_step);
                 }
             ], callback);
         });
