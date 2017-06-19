@@ -21,6 +21,16 @@ var async               = require("async"),
        its bound to, reboot the system and re-run this script on startup.
 \*****************************************************************************/
 async.series([
+    function test_if_wireless_interface_exists(callback) {
+        exec('iwconfig 2>/dev/null | grep -o "^\w*"', function(error, stdout, stderr) {
+            if (!stdout.match(/^\w+/)) {
+                console.log("No wireless interface exists. Exiting.")
+                process.exit(0);
+            }
+            // @todo Save stdout as the wireless interface name
+        })
+    },
+
     // Check if we already have an internet connection and bail out if so
     function test_is_internet_up(next_step) {
         ping.pingHost('www.google.com', function (error, target) {
@@ -33,13 +43,12 @@ async.series([
     },
 
     // Check if we have the required dependencies installed
-    function test_deps(next_step) {
+    function check_binary_deps(next_step) {
         dependency_manager.check_deps({
-            "binaries": ["dhcpd", "hostapd", "iw"],
-            "files":    ["/etc/systemd/system/dhcpd4@.service"]
+            "binaries": ["dhcpd", "hostapd", "iw"]
         }, function(error) {
-            if (error) console.log("\n * Dependency error, did you run `sudo npm run-script provision`?");
-            next_step(error);
+            if (error) console.log("\nOne or more dependencies missing, attempting to install dependencies.");
+            exec('sudo pacman -Sy --noconfirm --required dhcp hostapd iw', next_step);
         });
     },
 
@@ -74,7 +83,7 @@ async.series([
     //   us to choose the wifi of our choosing.
     function start_http_server(next_step) {
         require("./app/api.js")(wifi_manager, next_step);
-    },
+    }
 
 ], function(error) {
     if (error) {
