@@ -3,7 +3,8 @@ var _         = require("underscore")._,
     fs        = require("fs"),
     systemctl = require("./systemctl")(),
     exec      = require("child_process").exec,
-    config    = require("../config.json");
+    config    = require("../config.json"),
+    iwconfig  = require("./iwconfig");
 
 // Better template format
 _.templateSettings = {
