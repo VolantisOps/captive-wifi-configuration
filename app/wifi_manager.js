@@ -50,7 +50,7 @@ module.exports = function() {
         "ap_addr":         /Access Point:\s([^\s]+)/,
         "ap_ssid":         /ESSID:\"([^\"]+)\"/,
         "unassociated":    /(unassociated)\s+Nick/,
-    },  last_wifi_info = null;
+    };
 
     // TODO: wifi-config-ap hardcoded, should derive from a constant
 
@@ -82,13 +82,12 @@ module.exports = function() {
         // Run a bunch of commands and aggregate info
         async.series([
             function run_ifconfig(next_step) {
-                run_command_and_set_fields("ifconfig wlan0", ifconfig_fields, next_step);
+                run_command_and_set_fields("ifconfig " + config.wifi_interface, ifconfig_fields, next_step);
             },
             function run_iwconfig(next_step) {
-                run_command_and_set_fields("iwconfig wlan0", iwconfig_fields, next_step);
+                run_command_and_set_fields("iwconfig " + config.wifi_interface, iwconfig_fields, next_step);
             },
         ], function(error) {
-            last_wifi_info = output;
             return callback(error, output);
         });
     },
@@ -109,6 +108,12 @@ module.exports = function() {
             },
         ], callback);
     },
+
+    _get_wifi_interface_name = function(callback) {
+        iwconfig.status(function(error, status) {
+            callback(error, status[0]['interface'] || null);
+        });
+    }
 
     // Wifi related functions
     _is_wifi_enabled_sync = function(info) {
@@ -173,7 +178,7 @@ module.exports = function() {
             // Here we need to actually follow the steps to enable the ap
             async.series([
                 function disable_auto_wifi(next_step) {
-                    systemctl.disable('netctl-auto@' + context["wifi_interface"], next_step)
+                    systemctl.stop('netctl-auto@' + context["wifi_interface"], next_step)
                 },
 
                 // Enable the access point ip and netmask + static
@@ -202,15 +207,15 @@ module.exports = function() {
                         context, next_step);
                 },
 
-                function reload_systemd_daemon(next_step) {
-                    exec('sudo systemctl daemon-reload', next_step)
-                },
-
                 function update_hostapd_conf(next_step) {
                     write_template_to_file(
                         "./assets/etc/hostapd/hostapd.conf.template",
                         "/etc/hostapd/hostapd.conf",
                         context, next_step);
+                },
+
+                function reload_systemd(next_step) {
+                    systemctl.daemon_reload(next_step);
                 },
 
                 function restart_systemd_networkd(next_step) {
@@ -247,7 +252,6 @@ module.exports = function() {
             }
 
             async.series([
-
                 function remove_networkd_wifi_profile(next_step) {
                     fs.unlink("/etc/systemd/network/" + context["wifi_interface"] + ".template", next_step);
                 },
@@ -256,7 +260,6 @@ module.exports = function() {
                     systemctl.restart('systemd-networkd', next_step);
                 },
 
-                // Update /etc/network/interface with correct info...
                 function update_interfaces(next_step) {
                     write_template_to_file(
                         "./assets/etc/netctl/wifi.template",
@@ -273,7 +276,7 @@ module.exports = function() {
                 },
 
                 function enable_netctl_auto(next_step) {
-                    systemctl.enable('netctl-auto@' + context.wifi_interface, next_step);
+                    systemctl.restart('netctl-auto@' + context.wifi_interface, next_step);
                 },
 
                 function restart_network_interfaces(next_step) {
@@ -294,5 +297,6 @@ module.exports = function() {
         is_ap_enabled:            _is_ap_enabled,
         is_ap_enabled_sync:       _is_ap_enabled_sync,
         restart_wireless_network: _restart_wireless_network,
+        get_wifi_interface_name:  _get_wifi_interface_name
     };
 }
