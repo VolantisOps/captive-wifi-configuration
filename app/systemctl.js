@@ -26,6 +26,20 @@ module.exports = function() {
         })
     };
 
+    _start = function (service_name, callback) {
+        exec("sudo systemctl start " + service_name, function(error, stdout, stderr) {
+            if (error) return callback(error);
+            return callback(null);
+        })
+    };
+
+    _stop = function (service_name, callback) {
+        exec("sudo systemctl stop " + service_name, function(error, stdout, stderr) {
+            if (error) return callback(error);
+            return callback(null);
+        })
+    };
+
     _daemon_reload = function (callback) {
         exec("sudo systemctl daemon-reload", callback);
     }
@@ -34,6 +48,8 @@ module.exports = function() {
         enable:        _enable,
         disable:       _disable,
         restart:       _restart,
+        start:         _start,
+        stop:          _stop,
         daemon_reload: _daemon_reload
     };
 }
