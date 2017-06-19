@@ -23,11 +23,12 @@ var async               = require("async"),
        its bound to, reboot the system and re-run this script on startup.
 \*****************************************************************************/
 async.series([
-    function test_if_wireless_interface_exists(callback) {
+    function test_if_wireless_interface_exists(next_step) {
         iwconfig.status(function(error, status) {
             if (!error && status[0] != null) {
                 var interface = status[0]['interface'];
                 // @todo Save stdout as the wireless interface name
+                next_step();
             } else {
                 console.log("No wireless interface exists. Exiting.")
                 process.exit(0);
