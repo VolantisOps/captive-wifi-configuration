@@ -3,8 +3,7 @@ var async               = require("async"),
     dependency_manager  = require("./app/dependency_manager")(),
     config              = require("./config.json"),
     ping                = require("net-ping").createSession(),
-    exec                = require("child_process").exec,
-    iwconfig            = require('wireless-tools/iwconfig');
+    api                 = require('./app/api');
 
 /*****************************************************************************\
     1. Check for an existing internet connection
@@ -23,20 +22,19 @@ var async               = require("async"),
        its bound to, reboot the system and re-run this script on startup.
 \*****************************************************************************/
 async.series([
+
+    // Ensure a wireless interface actually exists
     function test_if_wireless_interface_exists(next_step) {
-        iwconfig.status(function(error, status) {
-            if (!error && status[0] != null) {
-                var interface = status[0]['interface'];
-                // @todo Save stdout as the wireless interface name
-                next_step();
-            } else {
-                console.log("No wireless interface exists. Exiting.")
+        wifi_manager.get_wifi_interface_name(function (error, interface) {
+            if (!interface) {
+                console.log("\nNo Wifi interface found. Exiting.");
                 process.exit(0);
             }
+            next_step(error);
         });
     },
 
-    // Check if we already have an internet connection and bail out if so
+    // Ensure we don't already have an active internet connection
     function test_is_internet_up(next_step) {
         ping.pingHost('www.google.com', function (error, target) {
             if (!error) {
@@ -47,17 +45,22 @@ async.series([
         });
     },
 
-    // Check if we have the required dependencies installed
-    function check_binary_deps(next_step) {
+    // Ensure we have the required dependencies installed
+    function check_deps(next_step) {
+        var deps = ["dhcpd", "hostapd", "iw"]
         dependency_manager.check_deps({
-            "binaries": ["dhcpd", "hostapd", "iw"]
+            "binaries": deps
         }, function(error) {
-            if (error) console.log("\nOne or more dependencies missing, attempting to install dependencies.");
-            exec('sudo pacman -Sy --noconfirm --needed dhcp hostapd iw', next_step);
+            if (error) {
+                console.log("\nOne or more dependencies missing, attempting to install dependencies.");
+                dependency_manager.install_binary_deps(deps, next_step)
+            } else {
+                next_step();
+            }
         });
     },
 
-    // Check if wifi is enabled / connected
+    // Ensure Wifi isn't already connected
     function test_is_wifi_enabled(next_step) {
         wifi_manager.is_wifi_enabled(function(error, result_ip) {
             if (result_ip) {
@@ -82,12 +85,9 @@ async.series([
         });
     },
 
-    // Host HTTP server while functioning as AP, the "api.js"
-    //   file contains all the needed logic to get a basic express
-    //   server up. It uses a small angular application which allows
-    //   us to choose the wifi of our choosing.
+    // Host HTTP server for wifi configuration
     function start_http_server(next_step) {
-        require("./app/api.js")(wifi_manager, next_step);
+        api(wifi_manager, next_step);
     }
 
 ], function(error) {
