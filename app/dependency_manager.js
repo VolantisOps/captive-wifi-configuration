@@ -54,7 +54,16 @@ module.exports = function() {
         ], callback);
     };
 
+    _install_binary_deps = function (deps, callback) {
+        if (deps.length == 0) {
+            callback(null);
+        } else {
+            exec('sudo pacman -Sy --noconfirm --needed ' + deps.join(' '), callback);
+        }
+    }
+
     return {
-        check_deps: _check_deps
+        check_deps: _check_deps,
+        install_binary_deps: _install_binary_deps
     };
 }
