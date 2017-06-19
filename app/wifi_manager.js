@@ -233,11 +233,8 @@ module.exports = function() {
 
                 function restart_hostapd_service(next_step) {
                     systemctl.restart('hostapd', next_step);
-                },
-
-                function setup_static_route(next_step) {
-                    exec('ip route add ' + config.access_point.subnet_ip + config.access_point.subnet_notation + ' dev ' + context.wifi_interface, next_step);
                 }
+                
             ], callback);
         });
     },
