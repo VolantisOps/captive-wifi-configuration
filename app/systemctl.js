@@ -5,30 +5,35 @@ var exec    = require("child_process").exec;
 \*****************************************************************************/
 module.exports = function() {
 
-    _enable = function(service_name, callback) {
-        exec("systemctl enable " + service_name, function(error, stdout, stderr) {
+    _enable = function (service_name, callback) {
+        exec("sudo systemctl enable " + service_name, function(error, stdout, stderr) {
             if (error) return callback(error);
             return callback(null)
         });
     };
 
-    _disable = function(service_name, callback) {
-        exec("systemctl disable " + service_name, function(error, stdout, stderr) {
+    _disable = function (service_name, callback) {
+        exec("sudo systemctl disable " + service_name, function(error, stdout, stderr) {
             if (error) return callback(error);
             return callback(null)
         });
     };
 
     _restart = function (service_name, callback) {
-        exec("systemctl restart " + service_name, function(error, stdout, stderr) {
+        exec("sudo systemctl restart " + service_name, function(error, stdout, stderr) {
             if (error) return callback(error);
             return callback(null);
         })
     };
 
+    _daemon_reload = function (callback) {
+        exec("sudo systemctl daemon-reload", callback);
+    }
+
     return {
-        enable: _enable,
-        disable: _disable,
-        restart: _restart
+        enable:        _enable,
+        disable:       _disable,
+        restart:       _restart,
+        daemon_reload: _daemon_reload
     };
 }
