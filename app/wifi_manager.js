@@ -286,13 +286,13 @@ module.exports = function() {
     };
 
     return {
-        enable_ap_mode:          _enable_ap_mode,
-        enable_wifi_mode:        _enable_wifi_mode,
-        get_wifi_info:           _get_wifi_info,
-        is_wifi_enabled:         _is_wifi_enabled,
-        is_wifi_enabled_sync:    _is_wifi_enabled_sync,
-        is_ap_enabled:           _is_ap_enabled,
-        is_ap_enabled_sync:      _is_ap_enabled_sync,
+        enable_ap_mode:           _enable_ap_mode,
+        enable_wifi_mode:         _enable_wifi_mode,
+        get_wifi_info:            _get_wifi_info,
+        is_wifi_enabled:          _is_wifi_enabled,
+        is_wifi_enabled_sync:     _is_wifi_enabled_sync,
+        is_ap_enabled:            _is_ap_enabled,
+        is_ap_enabled_sync:       _is_ap_enabled_sync,
         restart_wireless_network: _restart_wireless_network,
     };
 }
