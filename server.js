@@ -53,7 +53,7 @@ async.series([
             "binaries": ["dhcpd", "hostapd", "iw"]
         }, function(error) {
             if (error) console.log("\nOne or more dependencies missing, attempting to install dependencies.");
-            exec('sudo pacman -Sy --noconfirm --required dhcp hostapd iw', next_step);
+            exec('sudo pacman -Sy --noconfirm --needed dhcp hostapd iw', next_step);
         });
     },
 
